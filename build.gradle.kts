@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.github.mlynek496"
-version = "1.0.0"
+version = "1.0.2"
 
 repositories {
     mavenCentral()
@@ -49,4 +49,10 @@ publishing {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+configurations.all {
+    resolutionStrategy {
+        force("com.google.code.gson:gson:2.11.0")
+    }
 }
