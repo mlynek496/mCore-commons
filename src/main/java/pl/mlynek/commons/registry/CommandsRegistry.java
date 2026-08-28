@@ -35,13 +35,14 @@ import java.util.List;
 @Setter
 public class CommandsRegistry {
     private LiteCommands<CommandSender> liteCommands;
-    private final InvalidUsageResolver invalidUsageResolver = new InvalidUsageResolver();
-    private final PermissionResolver permissionsResolver = new PermissionResolver();
-    private final List<Object> commands = new ArrayList<>();
-    private final List<ContextEntry<?>> contexts = new ArrayList<>();
-    private final List<ArgumentEntry<?>> arguments = new ArrayList<>();
+    private InvalidUsageResolver invalidUsageResolver = new InvalidUsageResolver();
+    private PermissionResolver permissionsResolver = new PermissionResolver();
+    private List<Object> commands = new ArrayList<>();
+    private List<ContextEntry<?>> contexts = new ArrayList<>();
+    private List<ArgumentEntry<?>> arguments = new ArrayList<>();
 
-    public CommandsRegistry() {}
+    public CommandsRegistry() {
+    }
 
     public static CommandsRegistry of() {
         return new CommandsRegistry();
@@ -56,17 +57,15 @@ public class CommandsRegistry {
 
     public CommandsRegistry implementCommands(@NonNull Object... commands) {
         for (Object command : commands) {
-            if (!this.commands.contains(command)) {
-                this.commands.add(command);
-            }
+            this.implementCommand(command);
         }
         return this;
     }
 
     public CommandsRegistry implementCommands(@NonNull Collection<Object> commands) {
         for (Object command : commands) {
-            if (command != null && !this.commands.contains(command)) {
-                this.commands.add(command);
+            if (command != null) {
+                this.implementCommand(command);
             }
         }
         return this;
@@ -101,6 +100,7 @@ public class CommandsRegistry {
         builder.context(entry.getType(), entry.getContext());
     }
 
+    @SuppressWarnings("unchecked")
     private <T> void addArgument(LiteCommandsBuilder<CommandSender, LiteBukkitSettings, ?> builder, ArgumentEntry<T> entry) {
         if (entry.getKey() != null) {
             builder.argument(entry.getType(), entry.getKey(), entry.getArgument());
