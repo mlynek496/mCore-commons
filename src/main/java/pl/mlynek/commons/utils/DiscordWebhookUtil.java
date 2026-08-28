@@ -52,8 +52,9 @@ public class DiscordWebhookUtil {
         return this;
     }
 
-    public void addEmbed(EmbedObject embedObject) {
+    public DiscordWebhookUtil addEmbed(EmbedObject embedObject) {
         this.embeds.add(embedObject);
+        return this;
     }
 
     public void execute() {
@@ -147,7 +148,7 @@ public class DiscordWebhookUtil {
         });
     }
 
-    private static @NotNull List<JSONObject> getJsonObjects(List<EmbedObject.Field> fields) {
+    private static List<JSONObject> getJsonObjects(List<EmbedObject.Field> fields) {
         List<JSONObject> fieldObjects = new ArrayList<>();
         for (EmbedObject.Field field : fields) {
             JSONObject fieldJson = new JSONObject();
