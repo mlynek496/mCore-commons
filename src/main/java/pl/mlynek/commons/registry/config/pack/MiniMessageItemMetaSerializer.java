@@ -39,13 +39,13 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         if (itemMeta.hasDisplayName()) {
             Component name = itemMeta.displayName();
             if (name != null) {
-                data.set("display", clean(MM.serialize(name)));
+                data.set("display", MM.serialize(noItalic(name)));
             }
         }
         if (itemMeta.hasLore()) {
             List<Component> lore = itemMeta.lore();
             if (lore != null) {
-                data.setCollection("lore", lore.stream().map(line -> clean(MM.serialize(line))).toList(), String.class);
+                data.setCollection("lore", lore.stream().map(line -> MM.serialize(noItalic(line))).toList(), String.class);
             }
         }
         if (!itemMeta.getEnchants().isEmpty()) {
@@ -86,11 +86,7 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         return itemMeta;
     }
 
-    private String clean(String miniMessage) {
-        return miniMessage.replace("<!italic>", "").replace("<italic:false>", "");
-    }
-
     private Component noItalic(Component component) {
-        return component.decoration(TextDecoration.ITALIC, false);
+        return component.decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE);
     }
 }
