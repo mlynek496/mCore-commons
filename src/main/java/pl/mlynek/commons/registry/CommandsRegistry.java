@@ -80,8 +80,8 @@ public class CommandsRegistry {
         return this;
     }
 
-    public void build(Plugin plugin) {
-        LiteCommandsBuilder<CommandSender, LiteBukkitSettings, ?> builder = LiteBukkitFactory.builder("mcore", plugin).invalidUsage(this.invalidUsageResolver).missingPermission(this.permissionsResolver);
+    public void build(Plugin plugin, String commandsPrefix) {
+        LiteCommandsBuilder<CommandSender, LiteBukkitSettings, ?> builder = LiteBukkitFactory.builder(commandsPrefix, plugin).invalidUsage(this.invalidUsageResolver).missingPermission(this.permissionsResolver);
         builder.message(LiteBukkitMessages.PLAYER_ONLY, "&cTylko gracz może użyć tej komendy!").message(LiteBukkitMessages.LOCATION_INVALID_FORMAT, input -> AdventureUtil.translate("&#FF0000:( &cNiepoprawny format lokacji: &#FF0000" + input)).message(LiteBukkitMessages.COMMAND_COOLDOWN, input -> AdventureUtil.translate("&#FF0000:( &cNastepny raz ta komende bedziesz mogl użyć za &#FF0000" + TimeUtil.formatTimeSimple(input.getRemainingDuration().toMillis()))).message(LiteBukkitMessages.PLAYER_NOT_FOUND, input -> AdventureUtil.translate("&#FF0000:( &cGracz &#FF0000" + input + " &cnie zostal odnaleziony!")).message(LiteBukkitMessages.WORLD_NOT_EXIST, input -> AdventureUtil.translate("&#FF0000:( &cŚwiat &#FF0000" + input + " &cnie zostal odnaleziony!"));
         this.contexts.forEach(context -> this.addContext(builder, context));
         this.arguments.forEach(argument -> this.addArgument(builder, argument));
