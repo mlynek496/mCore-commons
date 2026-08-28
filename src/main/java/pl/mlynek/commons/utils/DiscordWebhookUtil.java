@@ -1,6 +1,7 @@
 package pl.mlynek.commons.utils;
 
 import lombok.RequiredArgsConstructor;
+import org.bukkit.plugin.Plugin;
 import org.json.simple.JSONObject;
 import pl.mlynek.commons.Main;
 import java.awt.*;
@@ -24,7 +25,7 @@ import java.util.logging.Level;
 @RequiredArgsConstructor
 public class DiscordWebhookUtil {
     private final String webhookUrl;
-    private final Main plugin;
+    private final Plugin plugin;
     private String content;
     private String username;
     private String avatarUrl;
