@@ -19,7 +19,8 @@ repositories {
 dependencies {
     compileOnly("org.projectlombok:lombok:1.18.32")
     annotationProcessor("org.projectlombok:lombok:1.18.32")
-    api("net.kyori:adventure-api:5.2.0")
+    api("net.kyori:adventure-api:4.17.0")
+    api("net.kyori:adventure-text-serializer-legacy:4.17.0")
     compileOnlyApi("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     compileOnlyApi("com.sk89q.worldguard:worldguard-bukkit:7.0.13")
     compileOnlyApi("com.mojang:authlib:1.5.25")
