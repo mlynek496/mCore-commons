@@ -21,6 +21,7 @@ import pl.mlynek.commons.utils.AdventureUtil;
 import pl.mlynek.commons.utils.TimeUtil;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -51,6 +52,24 @@ public class CommandsRegistry {
         if (!this.commands.contains(o)) {
             this.commands.add(o);
         }
+    }
+
+    public CommandsRegistry implementCommands(@NonNull Object... commands) {
+        for (Object command : commands) {
+            if ( this.commands.contains(command)) {
+                this.commands.add(command);
+            }
+        }
+        return this;
+    }
+
+    public CommandsRegistry implementCommands(@NonNull Collection<Object> commands) {
+        for (Object command : commands) {
+            if (command != null && !this.commands.contains(command)) {
+                this.commands.add(command);
+            }
+        }
+        return this;
     }
 
     public <T> void implementArgument(@NonNull Class<T> type, @NonNull ArgumentResolver<CommandSender, T> argument) {
