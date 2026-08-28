@@ -94,7 +94,6 @@ public class CommandsRegistry {
         builder.context(entry.getType(), entry.getContext());
     }
 
-    @SuppressWarnings("unchecked")
     private <T> void addArgument(LiteCommandsBuilder<CommandSender, LiteBukkitSettings, ?> builder, ArgumentEntry<T> entry) {
         if (entry.getKey() != null) {
             builder.argument(entry.getType(), entry.getKey(), entry.getArgument());
