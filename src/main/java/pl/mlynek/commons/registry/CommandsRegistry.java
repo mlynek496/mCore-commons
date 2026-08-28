@@ -19,7 +19,6 @@ import pl.mlynek.commons.resolver.InvalidUsageResolver;
 import pl.mlynek.commons.resolver.PermissionResolver;
 import pl.mlynek.commons.utils.AdventureUtil;
 import pl.mlynek.commons.utils.TimeUtil;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -41,12 +40,7 @@ public class CommandsRegistry {
     private List<ContextEntry<?>> contexts = new ArrayList<>();
     private List<ArgumentEntry<?>> arguments = new ArrayList<>();
 
-    public CommandsRegistry() {
-    }
-
-    public static CommandsRegistry of() {
-        return new CommandsRegistry();
-    }
+    public CommandsRegistry() {}
 
     public CommandsRegistry implementCommand(@NonNull Object o) {
         if (!this.commands.contains(o)) {
