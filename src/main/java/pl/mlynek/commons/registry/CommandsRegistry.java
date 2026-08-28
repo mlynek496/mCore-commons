@@ -91,7 +91,7 @@ public class CommandsRegistry {
         builder.message(LiteBukkitMessages.PLAYER_ONLY, "&cTylko gracz może użyć tej komendy!").message(LiteBukkitMessages.LOCATION_INVALID_FORMAT, input -> AdventureUtil.translate("&#FF0000:( &cNiepoprawny format lokacji: &#FF0000" + input)).message(LiteBukkitMessages.COMMAND_COOLDOWN, input -> AdventureUtil.translate("&#FF0000:( &cNastepny raz ta komende bedziesz mogl użyć za &#FF0000" + TimeUtil.formatTimeSimple(input.getRemainingDuration().toMillis()))).message(LiteBukkitMessages.PLAYER_NOT_FOUND, input -> AdventureUtil.translate("&#FF0000:( &cGracz &#FF0000" + input + " &cnie zostal odnaleziony!")).message(LiteBukkitMessages.WORLD_NOT_EXIST, input -> AdventureUtil.translate("&#FF0000:( &cŚwiat &#FF0000" + input + " &cnie zostal odnaleziony!"));
         this.contexts.forEach(context -> this.addContext(builder, context));
         this.arguments.forEach(argument -> this.addArgument(builder, argument));
-        this.commands.forEach(builder::commands);
+        builder.commands(this.commands.toArray());
         this.liteCommands = builder.build();
         plugin.getLogger().info("Zaladowano " + this.commands.size() + " komend, " + this.arguments.size() + " argumentow oraz " + this.contexts.size() + " kontekstow!");
     }
