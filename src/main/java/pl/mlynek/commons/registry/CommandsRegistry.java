@@ -17,9 +17,8 @@ import pl.mlynek.commons.registry.entry.ArgumentEntry;
 import pl.mlynek.commons.registry.entry.ContextEntry;
 import pl.mlynek.commons.resolver.InvalidUsageResolver;
 import pl.mlynek.commons.resolver.PermissionResolver;
+import pl.mlynek.commons.utils.AdventureUtil;
 import pl.mlynek.commons.utils.TimeUtil;
-import pl.mlynek.commons.utils.adventure.AdventureUtil;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
