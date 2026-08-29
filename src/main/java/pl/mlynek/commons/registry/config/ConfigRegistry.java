@@ -6,6 +6,7 @@ import eu.okaeri.configs.yaml.bukkit.YamlBukkitConfigurer;
 import eu.okaeri.configs.yaml.bukkit.serdes.SerdesBukkit;
 import lombok.RequiredArgsConstructor;
 import org.bukkit.plugin.Plugin;
+import pl.mlynek.commons.registry.config.configure.DoubleQuotedYamlConfigurer;
 import pl.mlynek.commons.registry.config.pack.ItemsSerdesPack;
 
 import java.io.File;
@@ -31,7 +32,7 @@ public class ConfigRegistry {
     public <T extends OkaeriConfig> T create(Class<T> clazz, File file) {
         T configFile = ConfigManager.create(clazz, it -> {
             it.configure(opt -> {
-                opt.configurer(new YamlBukkitConfigurer(), new SerdesBukkit(), new ItemsSerdesPack());
+                opt.configurer(new DoubleQuotedYamlConfigurer(), new SerdesBukkit(), new ItemsSerdesPack());
                 opt.bindFile(file);
                 opt.removeOrphans(true);
             });
