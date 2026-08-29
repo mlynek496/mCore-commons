@@ -72,22 +72,19 @@ public final class AdventureUtil {
     }
 
     public static Component miniMessage(String message, Map<String, String> placeholders) {
+        if (message == null || message.isEmpty()) {
+            return Component.empty();
+        }
         String parsed = message;
-        if (placeholders != null) {
-            for (Map.Entry<String, String> e : placeholders.entrySet()) {
-                parsed = parsed.replace("{" + e.getKey() + "}", e.getValue());
-            }
-        }
         if (parsed.contains("§")) {
-            Component comp = SECTION_SERIALIZER.deserialize(parsed);
-            return stripItalics(comp);
-        } else if (parsed.contains("&")) {
-            Component comp = translate(parsed);
-            return stripItalics(comp);
-        } else {
-            Component comp = MINI.deserialize(parsed, buildPlaceholders(placeholders));
-            return stripItalics(comp);
+            parsed = parsed.replace('§', '&');
         }
+        if (parsed.contains("&")) {
+            parsed = SERIALIZER.serialize(SERIALIZER.deserialize(parsed));
+        }
+        TagResolver resolver = buildPlaceholders(placeholders);
+        Component component = MINI.deserialize(parsed, resolver);
+        return AdventureUtil.stripItalics(component);
     }
 
     public static List<Component> miniMessage(Map<String, String> placeholders, String... messages) {
@@ -99,13 +96,17 @@ public final class AdventureUtil {
     }
 
     public static TagResolver buildPlaceholders(Map<String, String> placeholders) {
-        if (placeholders != null && !placeholders.isEmpty()) {
-            TagResolver.Builder builder = TagResolver.builder();
-            placeholders.forEach((key, value) -> builder.resolver(Placeholder.parsed(key, value)));
-            return builder.build();
-        } else {
+        if (placeholders == null || placeholders.isEmpty()) {
             return TagResolver.empty();
         }
+        TagResolver.Builder builder = TagResolver.builder();
+        placeholders.forEach((key, value) -> {
+            if (value != null) {
+                builder.resolver(Placeholder.parsed(key, value));
+                builder.resolver(Placeholder.parsed("{" + key + "}", value));
+            }
+        });
+        return builder.build();
     }
 
     public static String tpsWithFormat(double tps) {
