@@ -88,11 +88,12 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         return itemMeta;
     }
 
+
     private Component clean(Component component) {
-        Component cleaned = component;
-        if (cleaned.style().hasDecoration(TextDecoration.ITALIC)) {
-            cleaned = cleaned.decoration(TextDecoration.ITALIC, TextDecoration.State.NOT_SET);
+        if (component == null) {
+            return null;
         }
+        Component cleaned = component.decoration(TextDecoration.ITALIC, TextDecoration.State.NOT_SET);
         List<Component> cleanedChildren = cleaned.children().stream().map(this::clean).toList();
         return cleaned.children(cleanedChildren);
     }

@@ -35,10 +35,10 @@ public final class AdventureUtil {
     }
 
     private static Component stripItalics(Component component) {
-        Style noItalic = component.style().decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE);
-        component = component.style(noItalic);
-        List<Component> children = component.children().stream().map(AdventureUtil::stripItalics).toList();
-        return component.children(children);
+        if (component == null) {
+            return null;
+        }
+        return component.decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE);
     }
 
     public static Component translate(String string) {
