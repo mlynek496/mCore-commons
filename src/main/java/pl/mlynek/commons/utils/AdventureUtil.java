@@ -64,8 +64,10 @@ public final class AdventureUtil {
     }
 
     public static String componentToString(Component component) {
-        if (component == null) return "";
-        return PLAIN_TEXT_COMPONENT_SERIALIZER.serialize(component);
+        if (component == null) {
+            return "";
+        }
+        return MINI.serialize(component);
     }
 
     public static Component miniMessage(String message, Map<String, String> placeholders) {
