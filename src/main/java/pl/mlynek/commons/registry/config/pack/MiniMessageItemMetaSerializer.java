@@ -85,9 +85,12 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
     }
 
     private Component applyDefaultItalic(String text) {
+        if (text == null || text.isEmpty()) {
+            return Component.empty();
+        }
         String cleanText = text.replace("<!italic>", "").replace("<!i>", "").replace("<italic:false>", "").replace("<i:false>", "");
         Component component = this.MINI.deserialize(cleanText);
-        return component.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
+        return component.decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE);
     }
 
     private Component stripItalicFalse(Component component) {

@@ -15,6 +15,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.lang.reflect.Field;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -39,36 +40,22 @@ public class ItemBuilder {
     }
 
     public static ItemBuilder of(ItemStack itemStack) {
-        return new ItemBuilder(itemStack.clone()).fixColors();
+        return new ItemBuilder(itemStack.clone());
     }
 
-    public ItemBuilder fixColors() {
-        ItemMeta itemMeta = this.getMeta();
-        if (this.itemStack != null && this.itemStack.hasItemMeta()) {
-            if (itemMeta.hasDisplayName()) {
-                Component name = AdventureUtil.miniMessage(itemMeta.getDisplayName(), null);
-                itemMeta.displayName(name);
-            }
-            if (itemMeta.hasLore()) {
-                List<String> lore = itemMeta.getLore();
-                if (lore != null) {
-                    itemMeta.lore(AdventureUtil.miniMessage(lore, null));
-                }
-            }
-            this.itemStack.setItemMeta(itemMeta);
+    public ItemBuilder name(String name) {
+        if (this.itemMeta != null) {
+            this.itemMeta.displayName(AdventureUtil.miniMessage(name, null));
+            this.refreshMeta();
         }
         return this;
     }
 
-    public ItemBuilder name(String name) {
-        this.itemMeta.displayName(AdventureUtil.miniMessage(name, null));
-        this.refreshMeta();
-        return this;
-    }
-
     public ItemBuilder lore(List<String> strings) {
-        this.itemMeta.lore(AdventureUtil.miniMessage(strings, null));
-        this.refreshMeta();
+        if (this.itemMeta != null) {
+            this.itemMeta.lore(AdventureUtil.miniMessage(strings, null));
+            this.refreshMeta();
+        }
         return this;
     }
 
@@ -81,20 +68,22 @@ public class ItemBuilder {
     }
 
     public ItemBuilder appendLore(List<String> strings) {
-        List<Component> lore = this.itemMeta.hasLore() ? this.itemMeta.lore() : new ArrayList<>();
-        if (lore == null) {
-            lore = new ArrayList<>();
+        if (this.itemMeta != null) {
+            List<Component> currentLore = this.itemMeta.lore();
+            List<Component> lore = (this.itemMeta.hasLore() && currentLore != null) ? new ArrayList<>(currentLore) : new ArrayList<>();
+            lore.addAll(AdventureUtil.miniMessage(strings, null));
+            this.itemMeta.lore(lore);
+            this.refreshMeta();
         }
-        lore.addAll(AdventureUtil.miniMessage(strings, null));
-        this.itemMeta.lore(lore);
-        this.refreshMeta();
         return this;
     }
 
     public ItemBuilder glow() {
-        this.itemMeta.addEnchant(Enchantment.UNBREAKING, 1, true);
-        this.itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
-        this.refreshMeta();
+        if (this.itemMeta != null) {
+            this.itemMeta.addEnchant(Enchantment.UNBREAKING, 1, true);
+            this.itemMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+            this.refreshMeta();
+        }
         return this;
     }
 
@@ -104,21 +93,27 @@ public class ItemBuilder {
     }
 
     public ItemBuilder flag(ItemFlag... itemFlags) {
-        this.itemMeta.addItemFlags(itemFlags);
-        this.refreshMeta();
+        if (this.itemMeta != null) {
+            this.itemMeta.addItemFlags(itemFlags);
+            this.refreshMeta();
+        }
         return this;
     }
 
     public ItemBuilder enchantment(Enchantment enchantment, int level) {
-        this.itemMeta.addEnchant(enchantment, level, true);
-        this.refreshMeta();
+        if (this.itemMeta != null) {
+            this.itemMeta.addEnchant(enchantment, level, true);
+            this.refreshMeta();
+        }
         return this;
     }
 
     @SuppressWarnings("deprecation")
     public ItemBuilder setCustomModelData(int customModelData) {
-        this.itemMeta.setCustomModelData(customModelData);
-        this.refreshMeta();
+        if (this.itemMeta != null) {
+            this.itemMeta.setCustomModelData(customModelData);
+            this.refreshMeta();
+        }
         return this;
     }
 
@@ -144,29 +139,25 @@ public class ItemBuilder {
 
     public void setSkullTexture(SkullMeta meta, String textureValue) {
         try {
+            PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
+            profile.setProperty(new ProfileProperty("textures", textureValue));
+            meta.setPlayerProfile(profile);
+        } catch (Exception paperException) {
             try {
-                PlayerProfile profile = Bukkit.createProfile(UUID.randomUUID());
-                profile.setProperty(new ProfileProperty("textures", textureValue));
-                meta.setPlayerProfile(profile);
-            } catch (Exception paperException) {
+                org.bukkit.profile.PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
+                profile.getTextures().setSkin(new java.net.URL("https://textures.minecraft.net/texture/" + textureValue));
+                meta.setOwnerProfile(profile);
+            } catch (Exception bukkitException) {
                 try {
-                    PlayerProfile profile = (PlayerProfile) Bukkit.createPlayerProfile(UUID.randomUUID());
-                    profile.getTextures().setSkin(new java.net.URL("https://textures.minecraft.net/texture/" + textureValue));
-                    meta.setOwnerProfile(profile);
-                } catch (Exception bukkitException) {
-                    try {
-                        GameProfile profile = new GameProfile(UUID.randomUUID(), "");
-                        profile.getProperties().put("textures", new Property("textures", textureValue));
-                        Field profileField = meta.getClass().getDeclaredField("profile");
-                        profileField.setAccessible(true);
-                        profileField.set(meta, profile);
-                    } catch (IllegalAccessException | NoSuchFieldException e) {
-                        e.printStackTrace();
-                    }
+                    GameProfile profile = new GameProfile(UUID.randomUUID(), "");
+                    profile.getProperties().put("textures", new Property("textures", textureValue));
+                    Field profileField = meta.getClass().getDeclaredField("profile");
+                    profileField.setAccessible(true);
+                    profileField.set(meta, profile);
+                } catch (IllegalAccessException | NoSuchFieldException e) {
+                    e.printStackTrace();
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -175,10 +166,13 @@ public class ItemBuilder {
     }
 
     public void refreshMeta() {
-        this.itemStack.setItemMeta(this.itemMeta);
+        if (this.itemMeta != null) {
+            this.itemStack.setItemMeta(this.itemMeta);
+        }
     }
 
     public ItemStack asItemStack() {
+        this.refreshMeta();
         return this.itemStack;
     }
 }
