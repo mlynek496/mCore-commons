@@ -28,7 +28,6 @@ import java.util.Map;
  */
 
 public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta> {
-
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
     @Override
@@ -41,13 +40,13 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         if (itemMeta.hasDisplayName()) {
             Component name = itemMeta.displayName();
             if (name != null) {
-                data.set("display", MM.serialize(this.clean(name)));
+                data.set("display", clean(MM.serialize(name)));
             }
         }
         if (itemMeta.hasLore()) {
             List<Component> lore = itemMeta.lore();
             if (lore != null) {
-                data.setCollection("lore", lore.stream().map(line -> MM.serialize(this.clean(line))).toList(), String.class);
+                data.setCollection("lore", lore.stream().map(line -> clean(MM.serialize(line))).toList(), String.class);
             }
         }
         if (!itemMeta.getEnchants().isEmpty()) {
@@ -75,10 +74,10 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
             throw new IllegalStateException("Cannot extract empty ItemMeta from COBBLESTONE");
         }
         if (display != null) {
-            itemMeta.displayName(AdventureUtil.miniMessage(display, null));
+            itemMeta.displayName(noItalic(MM.deserialize(display)));
         }
         if (!lore.isEmpty()) {
-            itemMeta.lore(lore.stream().map(line -> AdventureUtil.miniMessage(line, null)).toList());
+            itemMeta.lore(lore.stream().map(line -> noItalic(MM.deserialize(line))).toList());
         }
         enchantments.forEach((enchantment, level) -> itemMeta.addEnchant(enchantment, level, true));
         itemMeta.addItemFlags(itemFlags.toArray(new ItemFlag[0]));
@@ -88,13 +87,12 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         return itemMeta;
     }
 
+    private String clean(String miniMessage) {
+        String withoutItalic = miniMessage.replace("<!italic>", "").replace("<italic:false>", "");
+        return GradientCollapser.collapse(withoutItalic);
+    }
 
-    private Component clean(Component component) {
-        if (component == null) {
-            return null;
-        }
-        Component cleaned = component.decoration(TextDecoration.ITALIC, TextDecoration.State.NOT_SET);
-        List<Component> cleanedChildren = cleaned.children().stream().map(this::clean).toList();
-        return cleaned.children(cleanedChildren);
+    private Component noItalic(Component component) {
+        return component.decoration(TextDecoration.ITALIC, false);
     }
 }

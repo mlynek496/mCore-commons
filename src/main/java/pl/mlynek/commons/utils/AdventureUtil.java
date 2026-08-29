@@ -2,16 +2,15 @@ package pl.mlynek.commons.utils;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -26,28 +25,22 @@ public final class AdventureUtil {
     private static final LegacyComponentSerializer SECTION_SERIALIZER = LegacyComponentSerializer.builder().character('§').hexCharacter('#').hexColors().extractUrls().useUnusualXRepeatedCharacterHexFormat().build();
     private static final PlainTextComponentSerializer PLAIN_TEXT_COMPONENT_SERIALIZER = PlainTextComponentSerializer.plainText();
     private static final MiniMessage MINI = MiniMessage.miniMessage();
-    private static final Pattern LEGACY_PATTERN = Pattern.compile("(?i)[&§][0-9A-FK-OR#]");
 
-    private AdventureUtil() {}
+    private AdventureUtil() {
+    }
 
     public static String legacy(String string) {
-        if (string == null) {
-            return "";
-        }
         return SECTION_SERIALIZER.serialize(SERIALIZER.deserialize(string));
     }
 
     private static Component stripItalics(Component component) {
-        if (component == null) {
-            return null;
-        }
-        return component.decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE);
+        Style noItalic = component.style().decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE);
+        component = component.style(noItalic);
+        List<Component> children = component.children().stream().map(AdventureUtil::stripItalics).toList();
+        return component.children(children);
     }
 
     public static Component translate(String string) {
-        if (string == null) {
-            return Component.empty();
-        }
         Component base = SERIALIZER.deserializeOrNull(string);
         return stripItalics(base);
     }
@@ -61,15 +54,12 @@ public final class AdventureUtil {
     }
 
     public static TextComponent textComponentOf(String string) {
-        if (string == null) {
-            return Component.empty();
-        }
         Component base = SERIALIZER.deserializeOrNull(string);
         return (TextComponent) stripItalics(base);
     }
 
     public static List<TextComponent> textComponentsOf(String... strings) {
-        return Stream.of(strings).map(AdventureUtil::textComponentOf).toList();
+        return Stream.of(strings).map((s) -> (TextComponent) stripItalics(SERIALIZER.deserializeOrNull(s))).toList();
     }
 
     public static List<TextComponent> textComponentsOf(List<String> strings) {
@@ -77,25 +67,26 @@ public final class AdventureUtil {
     }
 
     public static String componentToString(Component component) {
-        if (component == null) {
-            return "";
-        }
         return PLAIN_TEXT_COMPONENT_SERIALIZER.serialize(component);
     }
 
     public static Component miniMessage(String message, Map<String, String> placeholders) {
-        if (message == null || message.isEmpty()) {
-            return Component.empty();
-        }
         String parsed = message;
-        if (LEGACY_PATTERN.matcher(parsed).find() && !parsed.contains("<")) {
-            parsed = parsed.replace('§', '&');
-            Component legacyComponent = SERIALIZER.deserialize(parsed);
-            return stripItalics(legacyComponent);
+        if (placeholders != null) {
+            for (Map.Entry<String, String> e : placeholders.entrySet()) {
+                parsed = parsed.replace("{" + e.getKey() + "}", e.getValue());
+            }
         }
-        TagResolver resolver = AdventureUtil.buildPlaceholders(placeholders);
-        Component component = MINI.deserialize(parsed, resolver);
-        return stripItalics(component);
+        if (parsed.contains("§")) {
+            Component comp = SECTION_SERIALIZER.deserialize(parsed);
+            return stripItalics(comp);
+        } else if (parsed.contains("&")) {
+            Component comp = translate(parsed);
+            return stripItalics(comp);
+        } else {
+            Component comp = MINI.deserialize(parsed, buildPlaceholders(placeholders));
+            return stripItalics(comp);
+        }
     }
 
     public static List<Component> miniMessage(Map<String, String> placeholders, String... messages) {
@@ -107,17 +98,13 @@ public final class AdventureUtil {
     }
 
     public static TagResolver buildPlaceholders(Map<String, String> placeholders) {
-        if (placeholders == null || placeholders.isEmpty()) {
+        if (placeholders != null && !placeholders.isEmpty()) {
+            TagResolver.Builder builder = TagResolver.builder();
+            placeholders.forEach((key, value) -> builder.resolver(Placeholder.parsed(key, value)));
+            return builder.build();
+        } else {
             return TagResolver.empty();
         }
-        TagResolver.Builder builder = TagResolver.builder();
-        placeholders.forEach((key, value) -> {
-            if (value != null) {
-                builder.resolver(Placeholder.parsed(key, value));
-                builder.resolver(Placeholder.parsed("{" + key + "}", value));
-            }
-        });
-        return builder.build();
     }
 
     public static String tpsWithFormat(double tps) {
