@@ -26,7 +26,7 @@ import java.util.*;
  */
 
 public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta> {
-    private final MiniMessage MINI = MiniMessage.builder().emitVirtuals(false).tags(TagResolver.builder().resolver(TagResolver.standard()).resolver(TagResolver.resolver("b", Tag.styling(TextDecoration.BOLD))).build()).build();
+    private final MiniMessage MINI = MiniMessage.builder().emitVirtuals(false).build();
 
     @Override
     public boolean supports(@NotNull Class<?> type) {
@@ -86,6 +86,7 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
     private String serializeComponent(Component component) {
         Component stripped = stripItalicFalse(component);
         String serialized = this.MINI.serialize(stripped);
+        serialized = serialized.replace("<bold>", "<b>").replace("</bold>", "</b>");
         return GradientCollapser.collapse(serialized);
     }
 

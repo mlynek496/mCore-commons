@@ -12,8 +12,10 @@ import java.util.regex.Pattern;
  * @Project: mCore-commons
  * @Description: szkidbi eszkere gigachad
  */
+
 public class GradientCollapser {
-    private static final Pattern COLOR_TAG = Pattern.compile("<#([0-9a-fA-F]{6})>");
+
+    private static final Pattern HEX_COLOR_PATTERN = Pattern.compile("^<#([0-9a-fA-F]{6})>([^<]+)");
     private static final int TOLERANCE = 3;
     private static final int MAX_STOPS = 5;
 
@@ -30,34 +32,21 @@ public class GradientCollapser {
         List<int[]> runColors = new ArrayList<>();
         List<String> runChars = new ArrayList<>();
         while (i < n) {
-            Matcher m = COLOR_TAG.matcher(input);
-            m.region(i, n);
-            if (m.lookingAt()) {
-                String hex = m.group(1);
-                int endTag = m.end();
-                int nextTagIndex = input.indexOf("<", endTag);
-                if (nextTagIndex == -1) {
-                    nextTagIndex = n;
-                }
-                String content = input.substring(endTag, nextTagIndex);
-                if (!content.isEmpty()) {
+            if (input.startsWith("<#", i)) {
+                Matcher m = HEX_COLOR_PATTERN.matcher(input.substring(i));
+                if (m.find()) {
+                    String hex = m.group(1);
+                    String text = m.group(2);
                     runColors.add(hexToRgb(hex));
-                    runChars.add(content);
-                }
-                i = nextTagIndex;
-            } else {
-                flushRun(result, runColors, runChars);
-                int nextColor = input.indexOf("<#", i);
-                if (nextColor == -1) {
-                    result.append(input.substring(i));
-                    break;
-                } else {
-                    result.append(input, i, nextColor);
-                    i = nextColor;
+                    runChars.add(text);
+                    i += m.end();
+                    continue;
                 }
             }
+            flushRun(result, runColors, runChars);
+            result.append(input.charAt(i));
+            i++;
         }
-
         flushRun(result, runColors, runChars);
         return result.toString();
     }
@@ -82,17 +71,19 @@ public class GradientCollapser {
         if (colors.size() < 2) {
             return null;
         }
+
         int totalLen = 0;
         int[] startPos = new int[colors.size()];
         int[] lengths = new int[colors.size()];
+
         for (int i = 0; i < colors.size(); i++) {
             lengths[i] = chars.get(i).length();
             startPos[i] = totalLen;
             totalLen += lengths[i];
         }
-        if (totalLen == 0) {
-            return null;
-        }
+
+        if (totalLen == 0) return null;
+
         List<int[]> stopColors = detectStops(colors, startPos, lengths, totalLen);
         if (stopColors == null) {
             return null;
@@ -164,11 +155,7 @@ public class GradientCollapser {
     }
 
     private static int[] hexToRgb(String hex) {
-        return new int[]{
-                Integer.parseInt(hex.substring(0, 2), 16),
-                Integer.parseInt(hex.substring(2, 4), 16),
-                Integer.parseInt(hex.substring(4, 6), 16)
-        };
+        return new int[]{Integer.parseInt(hex.substring(0, 2), 16), Integer.parseInt(hex.substring(2, 4), 16), Integer.parseInt(hex.substring(4, 6), 16)};
     }
 
     private static String rgbToHex(int[] rgb) {
