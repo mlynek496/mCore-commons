@@ -6,7 +6,6 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
-import pl.mlynek.commons.Main;
 
 /**
  * @Author: mlyn3kk_

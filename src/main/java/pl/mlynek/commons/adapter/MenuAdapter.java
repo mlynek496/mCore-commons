@@ -2,7 +2,7 @@ package pl.mlynek.commons.adapter;
 
 import dev.triumphteam.gui.guis.Gui;
 import dev.triumphteam.gui.guis.PaginatedGui;
-import pl.mlynek.commons.utils.AdventureUtil;
+import pl.mlynek.commons.utils.adventure.AdventureUtil;
 
 /**
  * @Author: mlyn3kk_
