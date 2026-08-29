@@ -69,7 +69,6 @@ public final class GradientCollapser {
         int n = input.length();
         int i = contentStart;
         StringBuilder content = new StringBuilder();
-
         while (i < n) {
             if (input.startsWith(closeTag, i)) {
                 return new Boundary(content.toString(), i + closeTag.length());
@@ -81,7 +80,11 @@ public final class GradientCollapser {
                 continue;
             }
             if (c == '<') {
-                return new Boundary(content.toString(), i);
+                Matcher m = OPEN_TAG.matcher(input);
+                m.region(i, n);
+                if (m.lookingAt()) {
+                    return new Boundary(content.toString(), i);
+                }
             }
             content.append(c);
             i++;
