@@ -7,7 +7,7 @@ import net.kyori.adventure.util.Ticks;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import pl.mlynek.commons.utils.adventure.AdventureUtil;
+import pl.mlynek.commons.utils.AdventureUtil;
 
 import java.util.List;
 import java.util.Map;
