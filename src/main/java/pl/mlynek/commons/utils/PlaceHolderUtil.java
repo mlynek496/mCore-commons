@@ -29,17 +29,19 @@ public class PlaceHolderUtil {
             return newItem;
         }
         if (meta.hasDisplayName()) {
-            String displayName = meta.getDisplayName();
-            displayName = PlaceholderAPI.setPlaceholders(player, displayName);
-            meta.displayName(AdventureUtil.miniMessage(displayName, null));
+            Component currentName = meta.displayName();
+            String nameStr = AdventureUtil.componentToString(currentName);
+            nameStr = PlaceholderAPI.setPlaceholders(player, nameStr);
+            meta.displayName(AdventureUtil.translate(nameStr));
         }
         if (meta.hasLore()) {
-            List<String> lore = meta.getLore();
-            if (lore != null && !lore.isEmpty()) {
+            List<Component> currentLore = meta.lore();
+            if (currentLore != null && !currentLore.isEmpty()) {
                 List<Component> fixedLore = new ArrayList<>();
-                for (String line : lore) {
+                for (Component lineComp : currentLore) {
+                    String line = AdventureUtil.componentToString(lineComp);
                     line = PlaceholderAPI.setPlaceholders(player, line);
-                    fixedLore.add(AdventureUtil.miniMessage(line, null));
+                    fixedLore.add(AdventureUtil.translate(line));
                 }
                 meta.lore(fixedLore);
             }
