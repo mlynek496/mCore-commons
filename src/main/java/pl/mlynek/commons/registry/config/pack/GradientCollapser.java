@@ -17,7 +17,8 @@ public final class GradientCollapser {
     private static final int TOLERANCE = 2;
     private static final int MAX_STOPS = 5;
 
-    private GradientCollapser() {}
+    private GradientCollapser() {
+    }
 
     public static String collapse(String input) {
         StringBuilder result = new StringBuilder();
@@ -144,7 +145,6 @@ public final class GradientCollapser {
         return tag.toString();
     }
 
-
     private static int visualLength(String s) {
         int len = 0;
         int i = 0;
@@ -190,7 +190,6 @@ public final class GradientCollapser {
         return start.length - 1;
     }
 
-
     private static boolean matchesGradient(List<int[]> colors, int[] start, int[] visLen, int total, List<int[]> stopColors) {
         int k = stopColors.size();
         for (int r = 0; r < colors.size(); r++) {
@@ -205,10 +204,8 @@ public final class GradientCollapser {
                 float segFloat = t * (k - 1);
                 int seg = Math.min(k - 2, (int) Math.floor(segFloat));
                 float localT = segFloat - seg;
-
                 int[] c0 = stopColors.get(seg);
                 int[] c1 = stopColors.get(seg + 1);
-
                 for (int ch = 0; ch < 3; ch++) {
                     int expected = Math.round(c0[ch] + (c1[ch] - c0[ch]) * localT);
                     if (Math.abs(expected - actual[ch]) > TOLERANCE) {

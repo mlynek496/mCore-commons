@@ -1,6 +1,5 @@
 package pl.mlynek.commons.registry.config.pack;
 
-
 import eu.okaeri.configs.schema.GenericsDeclaration;
 import eu.okaeri.configs.serdes.DeserializationData;
 import eu.okaeri.configs.serdes.ObjectSerializer;
@@ -14,12 +13,10 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
-import pl.mlynek.commons.utils.AdventureUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * @Author: mlyn3kk_
@@ -31,7 +28,6 @@ import java.util.regex.Pattern;
 
 public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta> {
     private static final MiniMessage MM = MiniMessage.miniMessage();
-    private static final Pattern ITALIC_ARTIFACT = Pattern.compile("\\\\?</?!?italic(:(true|false))?>");
 
     @Override
     public boolean supports(@NotNull Class<?> type) {
@@ -39,17 +35,17 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
     }
 
     @Override
-    public void serialize(ItemMeta itemMeta, @NotNull SerializationData data, GenericsDeclaration generics) {
+    public void serialize(ItemMeta itemMeta, @NotNull SerializationData data, @NotNull GenericsDeclaration generics) {
         if (itemMeta.hasDisplayName()) {
             Component name = itemMeta.displayName();
             if (name != null) {
-                data.set("display", GradientCollapser.collapse(MM.serialize(notItalic(name))));
+                data.set("display", GradientCollapser.collapse(MM.serialize(stripItalicFalse(name))));
             }
         }
         if (itemMeta.hasLore()) {
             List<Component> lore = itemMeta.lore();
             if (lore != null) {
-                data.setCollection("lore", lore.stream().map(line -> GradientCollapser.collapse(MM.serialize(notItalic(line)))).toList(), String.class);
+                data.setCollection("lore", lore.stream().map(line -> GradientCollapser.collapse(MM.serialize(stripItalicFalse(line)))).toList(), String.class);
             }
         }
         if (!itemMeta.getEnchants().isEmpty()) {
@@ -64,7 +60,7 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
     }
 
     @Override
-    public ItemMeta deserialize(DeserializationData data, GenericsDeclaration generics) {
+    public ItemMeta deserialize(DeserializationData data, @NotNull GenericsDeclaration generics) {
         String display = data.get("display", String.class);
         if (display == null) {
             display = data.get("display-name", String.class);
@@ -77,10 +73,10 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
             throw new IllegalStateException("Cannot extract empty ItemMeta from COBBLESTONE");
         }
         if (display != null) {
-            itemMeta.displayName(notItalic(MM.deserialize(sanitize(display))));
+            itemMeta.displayName(applyDefaultItalic(display));
         }
         if (!lore.isEmpty()) {
-            itemMeta.lore(lore.stream().map(line -> notItalic(MM.deserialize(sanitize(line)))).toList());
+            itemMeta.lore(lore.stream().map(this::applyDefaultItalic).toList());
         }
         enchantments.forEach((enchantment, level) -> itemMeta.addEnchant(enchantment, level, true));
         itemMeta.addItemFlags(itemFlags.toArray(new ItemFlag[0]));
@@ -90,12 +86,16 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         return itemMeta;
     }
 
-    private Component notItalic(Component component) {
-        return component.decoration(TextDecoration.ITALIC, false);
+    private Component applyDefaultItalic(String text) {
+        String cleanText = text.replace("<!italic>", "").replace("<!i>", "").replace("<italic:false>", "").replace("<i:false>", "").trim();
+        Component component = MM.deserialize(cleanText);
+        return component.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
     }
 
-    private String sanitize(String raw) {
-        return ITALIC_ARTIFACT.matcher(raw).replaceAll("");
+    private Component stripItalicFalse(Component component) {
+        if (component.decoration(TextDecoration.ITALIC) == TextDecoration.State.FALSE) {
+            component = component.decoration(TextDecoration.ITALIC, TextDecoration.State.NOT_SET);
+        }
+        return component.children(component.children().stream().map(this::stripItalicFalse).toList());
     }
 }
-
