@@ -7,15 +7,22 @@ import eu.okaeri.configs.serdes.SerializationData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.tag.Tag;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+
 import java.util.*;
+import java.text.Normalizer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @Author: mlyn3kk_
@@ -26,6 +33,7 @@ import java.util.*;
  */
 
 public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta> {
+
     private final MiniMessage MINI = MiniMessage.builder().emitVirtuals(false).build();
 
     @Override
@@ -68,6 +76,7 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         List<String> lore = data.containsKey("lore") ? data.getAsList("lore", String.class) : Collections.emptyList();
         Map<Enchantment, Integer> enchantments = data.containsKey("enchantments") ? data.getAsMap("enchantments", Enchantment.class, Integer.class) : Collections.emptyMap();
         List<ItemFlag> itemFlags = new ArrayList<>(data.containsKey("flags") ? data.getAsList("flags", ItemFlag.class) : Collections.emptyList());
+
         ItemMeta itemMeta = Objects.requireNonNull(new ItemStack(Material.COBBLESTONE).getItemMeta());
         if (display != null) {
             itemMeta.displayName(applyDefaultItalic(display));
@@ -87,7 +96,34 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         Component stripped = stripItalicFalse(component);
         String serialized = this.MINI.serialize(stripped);
         serialized = serialized.replace("<bold>", "<b>").replace("</bold>", "</b>");
-        return GradientCollapser.collapse(serialized);
+        return collapseGradients(serialized);
+    }
+
+    private String collapseGradients(String input) {
+        if (input == null || !input.contains("<#")) {
+            return input;
+        }
+        String text = Normalizer.normalize(input, Normalizer.Form.NFC).replaceAll("(?i)</#[0-9a-f]{6}>", "");
+        Matcher matcher = Pattern.compile("(?:<#([0-9a-fA-F]{6})>([^<]+))+").matcher(text);
+        StringBuilder sb = new StringBuilder();
+        while (matcher.find()) {
+            Matcher tokens = Pattern.compile("<#([0-9a-fA-F]{6})>([^<]+)").matcher(matcher.group());
+            List<String> colors = new ArrayList<>();
+            StringBuilder textBuf = new StringBuilder();
+            while (tokens.find()) {
+                String hex = tokens.group(1).toUpperCase();
+                if (colors.isEmpty() || !colors.getLast().equals(hex)) {
+                    colors.add(hex);
+                }
+                textBuf.append(tokens.group(2));
+            }
+            if (colors.size() >= 2) {
+                String grad = "<gradient:" + String.join(":", colors.stream().map(c -> "#" + c).toList()) + ">" + textBuf + "</gradient>";
+                matcher.appendReplacement(sb, Matcher.quoteReplacement(grad));
+            }
+        }
+        matcher.appendTail(sb);
+        return sb.toString();
     }
 
     private Component applyDefaultItalic(String text) {
