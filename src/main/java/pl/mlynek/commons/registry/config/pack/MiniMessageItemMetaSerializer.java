@@ -13,11 +13,13 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.NotNull;
 import pl.mlynek.commons.utils.AdventureUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * @Author: mlyn3kk_
@@ -29,24 +31,25 @@ import java.util.Map;
 
 public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta> {
     private static final MiniMessage MM = MiniMessage.miniMessage();
+    private static final Pattern ITALIC_ARTIFACT = Pattern.compile("\\\\?</?!?italic(:(true|false))?>");
 
     @Override
-    public boolean supports(Class<?> type) {
+    public boolean supports(@NotNull Class<?> type) {
         return ItemMeta.class.isAssignableFrom(type);
     }
 
     @Override
-    public void serialize(ItemMeta itemMeta, SerializationData data, GenericsDeclaration generics) {
+    public void serialize(ItemMeta itemMeta, @NotNull SerializationData data, GenericsDeclaration generics) {
         if (itemMeta.hasDisplayName()) {
             Component name = itemMeta.displayName();
             if (name != null) {
-                data.set("display", clean(MM.serialize(name)));
+                data.set("display", clean(MM.serialize(stripItalic(name))));
             }
         }
         if (itemMeta.hasLore()) {
             List<Component> lore = itemMeta.lore();
             if (lore != null) {
-                data.setCollection("lore", lore.stream().map(line -> clean(MM.serialize(line))).toList(), String.class);
+                data.setCollection("lore", lore.stream().map(line -> clean(MM.serialize(stripItalic(line)))).toList(), String.class);
             }
         }
         if (!itemMeta.getEnchants().isEmpty()) {
@@ -74,10 +77,10 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
             throw new IllegalStateException("Cannot extract empty ItemMeta from COBBLESTONE");
         }
         if (display != null) {
-            itemMeta.displayName(noItalic(MM.deserialize(display)));
+            itemMeta.displayName(forceNotItalic(MM.deserialize(sanitize(display))));
         }
         if (!lore.isEmpty()) {
-            itemMeta.lore(lore.stream().map(line -> noItalic(MM.deserialize(line))).toList());
+            itemMeta.lore(lore.stream().map(line -> forceNotItalic(MM.deserialize(sanitize(line)))).toList());
         }
         enchantments.forEach((enchantment, level) -> itemMeta.addEnchant(enchantment, level, true));
         itemMeta.addItemFlags(itemFlags.toArray(new ItemFlag[0]));
@@ -88,11 +91,26 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
     }
 
     private String clean(String miniMessage) {
-        String withoutItalic = miniMessage.replace("<!italic>", "").replace("<italic:false>", "");
-        return GradientCollapser.collapse(withoutItalic);
+        return GradientCollapser.collapse(miniMessage);
     }
 
-    private Component noItalic(Component component) {
-        return component.decoration(TextDecoration.ITALIC, false);
+    private String sanitize(String raw) {
+        return ITALIC_ARTIFACT.matcher(raw).replaceAll("");
+    }
+
+    private Component stripItalic(Component component) {
+        Component result = component.decoration(TextDecoration.ITALIC, TextDecoration.State.NOT_SET);
+        if (result.children().isEmpty()) {
+            return result;
+        }
+        return result.children(result.children().stream().map(this::stripItalic).toList());
+    }
+
+    private Component forceNotItalic(Component component) {
+        Component result = component.decoration(TextDecoration.ITALIC, false);
+        if (result.children().isEmpty()) {
+            return result;
+        }
+        return result.children(result.children().stream().map(this::forceNotItalic).toList());
     }
 }
