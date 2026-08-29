@@ -6,7 +6,6 @@ import eu.okaeri.configs.serdes.DeserializationData;
 import eu.okaeri.configs.serdes.ObjectSerializer;
 import eu.okaeri.configs.serdes.SerializationData;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -43,13 +42,13 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         if (itemMeta.hasDisplayName()) {
             Component name = itemMeta.displayName();
             if (name != null) {
-                data.set("display", clean(MM.serialize(stripItalic(name))));
+                data.set("display", MM.serialize(AdventureUtil.stripItalics(name)));
             }
         }
         if (itemMeta.hasLore()) {
             List<Component> lore = itemMeta.lore();
             if (lore != null) {
-                data.setCollection("lore", lore.stream().map(line -> clean(MM.serialize(stripItalic(line)))).toList(), String.class);
+                data.setCollection("lore", lore.stream().map(line -> MM.serialize(AdventureUtil.stripItalics(line))).toList(), String.class);
             }
         }
         if (!itemMeta.getEnchants().isEmpty()) {
@@ -77,10 +76,10 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
             throw new IllegalStateException("Cannot extract empty ItemMeta from COBBLESTONE");
         }
         if (display != null) {
-            itemMeta.displayName(forceNotItalic(MM.deserialize(sanitize(display))));
+            itemMeta.displayName(AdventureUtil.stripItalics(MM.deserialize(sanitize(display))));
         }
         if (!lore.isEmpty()) {
-            itemMeta.lore(lore.stream().map(line -> forceNotItalic(MM.deserialize(sanitize(line)))).toList());
+            itemMeta.lore(lore.stream().map(line -> AdventureUtil.stripItalics(MM.deserialize(sanitize(line)))).toList());
         }
         enchantments.forEach((enchantment, level) -> itemMeta.addEnchant(enchantment, level, true));
         itemMeta.addItemFlags(itemFlags.toArray(new ItemFlag[0]));
@@ -90,27 +89,7 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         return itemMeta;
     }
 
-    private String clean(String miniMessage) {
-        return GradientCollapser.collapse(miniMessage);
-    }
-
     private String sanitize(String raw) {
         return ITALIC_ARTIFACT.matcher(raw).replaceAll("");
-    }
-
-    private Component stripItalic(Component component) {
-        Component result = component.decoration(TextDecoration.ITALIC, TextDecoration.State.NOT_SET);
-        if (result.children().isEmpty()) {
-            return result;
-        }
-        return result.children(result.children().stream().map(this::stripItalic).toList());
-    }
-
-    private Component forceNotItalic(Component component) {
-        Component result = component.decoration(TextDecoration.ITALIC, false);
-        if (result.children().isEmpty()) {
-            return result;
-        }
-        return result.children(result.children().stream().map(this::forceNotItalic).toList());
     }
 }

@@ -33,7 +33,7 @@ public final class AdventureUtil {
         return SECTION_SERIALIZER.serialize(SERIALIZER.deserialize(string));
     }
 
-    private static Component stripItalics(Component component) {
+    public static Component stripItalics(Component component) {
         Style noItalic = component.style().decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE);
         component = component.style(noItalic);
         List<Component> children = component.children().stream().map(AdventureUtil::stripItalics).toList();
