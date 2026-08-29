@@ -13,7 +13,9 @@ import java.util.regex.Pattern;
  * @Description: szkidbi eszkere gigachad
  */
 public final class GradientCollapser {
+
     private static final Pattern OPEN_TAG = Pattern.compile("<#([0-9a-fA-F]{6})>");
+    private static final Pattern ANY_TAG = Pattern.compile("<[^>]+>");
     private static final int TOLERANCE = 2;
     private static final int MAX_STOPS = 5;
 
@@ -21,6 +23,10 @@ public final class GradientCollapser {
     }
 
     public static String collapse(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+
         StringBuilder result = new StringBuilder();
         int n = input.length();
         int i = 0;
@@ -81,7 +87,7 @@ public final class GradientCollapser {
                 continue;
             }
             if (c == '<') {
-                Matcher m = OPEN_TAG.matcher(input);
+                Matcher m = ANY_TAG.matcher(input);
                 m.region(i, n);
                 if (m.lookingAt()) {
                     return new Boundary(content.toString(), i);
@@ -103,7 +109,7 @@ public final class GradientCollapser {
         } else {
             for (int i = 0; i < colors.size(); i++) {
                 String hex = rgbToHex(colors.get(i));
-                result.append("<#").append(hex).append('>').append(chars.get(i)).append("</#").append(hex).append('>');
+                result.append("<#").append(hex).append('>').append(chars.get(i));
             }
         }
         colors.clear();
@@ -146,11 +152,12 @@ public final class GradientCollapser {
     }
 
     private static int visualLength(String s) {
+        String clean = s.replaceAll("<[^>]+>", "");
         int len = 0;
         int i = 0;
-        int n = s.length();
+        int n = clean.length();
         while (i < n) {
-            if (s.charAt(i) == '\\' && i + 1 < n) {
+            if (clean.charAt(i) == '\\' && i + 1 < n) {
                 i += 2;
             } else {
                 i += 1;

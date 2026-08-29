@@ -13,10 +13,8 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 
 /**
  * @Author: mlyn3kk_
@@ -27,6 +25,7 @@ import java.util.Map;
  */
 
 public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta> {
+
     private static final MiniMessage MM = MiniMessage.miniMessage();
 
     @Override
@@ -68,10 +67,8 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         List<String> lore = data.containsKey("lore") ? data.getAsList("lore", String.class) : Collections.emptyList();
         Map<Enchantment, Integer> enchantments = data.containsKey("enchantments") ? data.getAsMap("enchantments", Enchantment.class, Integer.class) : Collections.emptyMap();
         List<ItemFlag> itemFlags = new ArrayList<>(data.containsKey("flags") ? data.getAsList("flags", ItemFlag.class) : Collections.emptyList());
-        ItemMeta itemMeta = new ItemStack(Material.COBBLESTONE).getItemMeta();
-        if (itemMeta == null) {
-            throw new IllegalStateException("Cannot extract empty ItemMeta from COBBLESTONE");
-        }
+        ItemMeta itemMeta = Objects.requireNonNull(new ItemStack(Material.COBBLESTONE).getItemMeta());
+
         if (display != null) {
             itemMeta.displayName(applyDefaultItalic(display));
         }
@@ -87,7 +84,7 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
     }
 
     private Component applyDefaultItalic(String text) {
-        String cleanText = text.replace("<!italic>", "").replace("<!i>", "").replace("<italic:false>", "").replace("<i:false>", "").trim();
+        String cleanText = text.replace("<!italic>", "").replace("<!i>", "").replace("<italic:false>", "").replace("<i:false>", "");
         Component component = MM.deserialize(cleanText);
         return component.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
     }
