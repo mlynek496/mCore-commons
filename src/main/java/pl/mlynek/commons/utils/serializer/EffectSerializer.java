@@ -18,8 +18,7 @@ import java.util.List;
  */
 public final class EffectSerializer {
 
-    private EffectSerializer() {
-    }
+    private EffectSerializer() {}
 
     public static String serializePotionEffects(final Collection<PotionEffect> effects) {
         if (effects == null || effects.isEmpty()) {

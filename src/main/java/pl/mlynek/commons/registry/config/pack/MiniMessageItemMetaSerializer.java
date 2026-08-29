@@ -7,6 +7,8 @@ import eu.okaeri.configs.serdes.SerializationData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.minimessage.tag.Tag;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
@@ -25,8 +27,7 @@ import java.util.*;
  */
 
 public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta> {
-
-    private static final MiniMessage MM = MiniMessage.miniMessage();
+    private final MiniMessage MINI = MiniMessage.builder().tags(TagResolver.builder().resolver(TagResolver.standard()).resolver(TagResolver.resolver("bold", Tag.styling(TextDecoration.BOLD))).build()).build();
 
     @Override
     public boolean supports(@NotNull Class<?> type) {
@@ -38,13 +39,13 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         if (itemMeta.hasDisplayName()) {
             Component name = itemMeta.displayName();
             if (name != null) {
-                data.set("display", GradientCollapser.collapse(MM.serialize(stripItalicFalse(name))));
+                data.set("display", GradientCollapser.collapse(this.MINI.serialize(stripItalicFalse(name))));
             }
         }
         if (itemMeta.hasLore()) {
             List<Component> lore = itemMeta.lore();
             if (lore != null) {
-                data.setCollection("lore", lore.stream().map(line -> GradientCollapser.collapse(MM.serialize(stripItalicFalse(line)))).toList(), String.class);
+                data.setCollection("lore", lore.stream().map(line -> GradientCollapser.collapse(this.MINI.serialize(stripItalicFalse(line)))).toList(), String.class);
             }
         }
         if (!itemMeta.getEnchants().isEmpty()) {
@@ -85,7 +86,7 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
 
     private Component applyDefaultItalic(String text) {
         String cleanText = text.replace("<!italic>", "").replace("<!i>", "").replace("<italic:false>", "").replace("<i:false>", "");
-        Component component = MM.deserialize(cleanText);
+        Component component = this.MINI.deserialize(cleanText);
         return component.decorationIfAbsent(TextDecoration.ITALIC, TextDecoration.State.FALSE);
     }
 
