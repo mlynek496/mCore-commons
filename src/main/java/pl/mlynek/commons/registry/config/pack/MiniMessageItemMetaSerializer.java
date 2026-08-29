@@ -42,13 +42,13 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         if (itemMeta.hasDisplayName()) {
             Component name = itemMeta.displayName();
             if (name != null) {
-                data.set("display", MM.serialize(AdventureUtil.stripItalics(name)));
+                data.set("display", GradientCollapser.collapse(MM.serialize(AdventureUtil.stripItalics(name))));
             }
         }
         if (itemMeta.hasLore()) {
             List<Component> lore = itemMeta.lore();
             if (lore != null) {
-                data.setCollection("lore", lore.stream().map(line -> MM.serialize(AdventureUtil.stripItalics(line))).toList(), String.class);
+                data.setCollection("lore", lore.stream().map(line -> GradientCollapser.collapse(MM.serialize(AdventureUtil.stripItalics(line)))).toList(), String.class);
             }
         }
         if (!itemMeta.getEnchants().isEmpty()) {
