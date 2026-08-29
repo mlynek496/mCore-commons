@@ -15,7 +15,6 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
-
 import java.util.*;
 
 /**
@@ -27,7 +26,7 @@ import java.util.*;
  */
 
 public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta> {
-    private final MiniMessage MINI = MiniMessage.builder().tags(TagResolver.builder().resolver(TagResolver.standard()).resolver(TagResolver.resolver("bold", Tag.styling(TextDecoration.BOLD))).build()).build();
+    private final MiniMessage MINI = MiniMessage.builder().emitVirtuals(false).tags(TagResolver.builder().resolver(TagResolver.standard()).resolver(TagResolver.resolver("b", Tag.styling(TextDecoration.BOLD))).build()).build();
 
     @Override
     public boolean supports(@NotNull Class<?> type) {
@@ -39,13 +38,14 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         if (itemMeta.hasDisplayName()) {
             Component name = itemMeta.displayName();
             if (name != null) {
-                data.set("display", GradientCollapser.collapse(this.MINI.serialize(stripItalicFalse(name))));
+                data.set("display", serializeComponent(name));
             }
         }
         if (itemMeta.hasLore()) {
             List<Component> lore = itemMeta.lore();
             if (lore != null) {
-                data.setCollection("lore", lore.stream().map(line -> GradientCollapser.collapse(this.MINI.serialize(stripItalicFalse(line)))).toList(), String.class);
+                List<String> serializedLore = lore.stream().map(this::serializeComponent).toList();
+                data.setCollection("lore", serializedLore, String.class);
             }
         }
         if (!itemMeta.getEnchants().isEmpty()) {
@@ -69,7 +69,6 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
         Map<Enchantment, Integer> enchantments = data.containsKey("enchantments") ? data.getAsMap("enchantments", Enchantment.class, Integer.class) : Collections.emptyMap();
         List<ItemFlag> itemFlags = new ArrayList<>(data.containsKey("flags") ? data.getAsList("flags", ItemFlag.class) : Collections.emptyList());
         ItemMeta itemMeta = Objects.requireNonNull(new ItemStack(Material.COBBLESTONE).getItemMeta());
-
         if (display != null) {
             itemMeta.displayName(applyDefaultItalic(display));
         }
@@ -82,6 +81,12 @@ public class MiniMessageItemMetaSerializer implements ObjectSerializer<ItemMeta>
             itemMeta.setCustomModelData(data.get("custom-model-data", Integer.class));
         }
         return itemMeta;
+    }
+
+    private String serializeComponent(Component component) {
+        Component stripped = stripItalicFalse(component);
+        String serialized = this.MINI.serialize(stripped);
+        return GradientCollapser.collapse(serialized);
     }
 
     private Component applyDefaultItalic(String text) {
